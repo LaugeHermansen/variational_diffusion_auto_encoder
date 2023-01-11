@@ -1,0 +1,319 @@
+\section{Appendix}
+\subsection{Deriving $q(x_t|x_0), t=1\hdots T$}
+ \begin{align}
+     x_t &= x_{t-1} + \sqrt{\beta_t}\epsilon_t\\
+     &= x_{t-2} + \sqrt{\beta_{t-1}}\epsilon_{t-1} +  \sqrt{\beta_t}\epsilon_t\\
+     &\hspace{5.5pt}\vdots\\
+     &=x_0 +  \sum_{i=1}^t \sqrt{\beta_{i}}\epsilon_i,\quad \epsilon_i\sim\N(0,I)\\
+     &=x_0+\sqrt{\bar\beta_t}\epsilon,\quad 
+     \epsilon\sim\N(0,I)
+ \end{align}
+ \subsection{Deriving $q(x_{t-1}|x_t,x_0), t=2\hdots T$}
+ \begin{align}
+     q(x_{t-1}|x_t,x_0)&=\frac{q(x_t|x_{t-1})q(x_{t-1}|x_0)}{q(x_t|x_0)}\\
+     %
+     &=\frac{\N(x_t;x_{t-1},\beta_t I)\N(x_{t-1};x_0,\bar\beta_{t-1} I)}
+     {\N(x_t;x_0,\bar\beta_t I)}\\
+     %
+     &\propto\exp\left( \frac{||x_t-x_{t-1}||^2}{2\beta_t}
+     + \frac{||x_{t-1}-x_{0}||^2}{2\bar\beta_{t-1}}
+     - \frac{||x_t-x_{0}||^2}{2\bar\beta_{t}} \right)\\
+     %
+     &=\exp\left( \frac{x_t^2+x_{t-1}^2-2x_t^Tx_{t-1}}{2\beta_t}
+     + \frac{x_{t-1}^2+x_{0}^2-2x_{t-1}^Tx_{0}}{2\bar\beta_{t-1}}
+     - \frac{x_t^2+x_{0}^2-2x_t^Tx_0}{2\bar\beta_{t}} \right)\\
+     %
+     &\propto\exp\left[\frac12\left\{
+     %
+     x_{t-1}^2\left(\frac{1}{\beta_t}+\frac{1}{\bar\beta_{t-1}}\right)
+     %
+     + x_{t-1}^T\left(
+     -\frac{2x_t}{\beta_{t}}
+     -\frac{2x_0}{\bar\beta_{t-1}}
+     \right)
+     \right\}\right]
+     %
+     \\
+     &=\exp\left[\frac12\left\{
+     %
+     x_{t-1}^2\left(\frac{\bar\beta_{t}}{\beta_t \bar\beta_{t-1}}\right)
+     %
+     -2 x_{t-1}^T\left(
+     \frac{x_t}{\beta_{t}}
+     +\frac{x_0}{\bar\beta_{t-1}}
+     \right)
+     \right\}\right]
+     %
+     \\
+     &=\exp\left[\frac12 \frac{\bar\beta_{t}}{\beta_t \bar\beta_{t-1}}\left\{
+     %
+     x_{t-1}^2
+     %
+     -2 x_{t-1}^T\frac{\left(
+     \frac{x_t}{\beta_{t}}
+     +\frac{x_0}{\bar\beta_{t-1}}
+     \right)}{\frac{\bar\beta_{t}}{\beta_t \bar\beta_{t-1}}}
+     \right\}\right]
+     \\
+     &=\exp\left[\frac12 \frac{\bar\beta_{t}}{\beta_t \bar\beta_{t-1}}\left\{
+     %
+     x_{t-1}^2
+     %
+     -2 x_{t-1}^T\frac{
+     {x_t\bar\beta_{t-1}}
+     +{x_0\beta_t}
+     }{\bar\beta_{t}}
+     \right\}\right]
+     \\
+     &\propto\exp\left[\frac12 \frac{\bar\beta_{t}}{\beta_t \bar\beta_{t-1}}\left(
+     %
+     x_{t-1}
+     %
+     -\frac{
+     {x_t\bar\beta_{t-1}}
+     +{x_0\beta_t}
+     }{\bar\beta_{t}}
+     \right)^2
+     \right]
+     \\
+     &\propto
+     \N\left(x_{t-1}; 
+     \frac{
+     {x_t\bar\beta_{t-1}}
+     +{x_0\beta_t}
+     }{\bar\beta_{t}}
+     , 
+     \frac{\beta_t \bar\beta_{t-1}}{\bar\beta_{t}}
+     \right), \quad t=2\hdots T
+ \end{align}
+
+\subsection{Deriving ELBO}
+
+\begin{align}
+    \log p(x_0) &\ge ELBO\\
+    &=\E_{q(x_{1:T},z|x_0)}\left[\log \frac{p(x_{0:T},z)}{q(x_{1:T},z|x_0)}\right]\\
+    %
+    &= \E_{q(x_{1:T},z|x_0)}\left[\log \frac{p(z) p(x_T|z)\prod_{t=1}^T p(x_{t-1}|x_t)}{q(z|x_T)\prod_{t=1}^T q(x_t|x_{t-1})}\right]\\
+    %
+    &= \E_{q(x_{1:T},z|x_0)}\left[\log \frac{p(z) p(x_T|z)p(x_0|x_1)\prod_{t=2}^T p(x_{t-1}|x_t)}{q(z|x_T)q(x_1|x_0)\prod_{t=2}^T q(x_t|x_{t-1})}\right]\\
+    %
+    &= \E_{q(x_{1:T},z|x_0)}\left[\log \frac{p(x_0|x_1)}{q(x_1|x_0)}
+    +
+    \log \prod_{t=2}^T \frac{p(x_{t-1}|x_t)}{q(x_t|x_{t-1})}
+    +
+    \log \frac{p(z) p(x_T|z)}{q(z|x_T)}\right]\\
+    %
+    &= \E_{q(x_{1:T},z|x_0)}\left[
+    \log \frac{p(x_0|x_1)}{q(x_1|x_0)}
+    +
+    \log \prod_{t=2}^T \frac{p(x_{t-1}|x_t)q(x_{t-1}| x_0)}{q(x_{t-1}|x_t, x_0)q(x_t|x_0)}
+    +
+    \log \frac{p(z) p(x_T|z)}{q(z|x_T)}\right]\\
+    %
+    &= \E_{q(x_{1:T},z|x_0)}\left[
+    \log p(x_0|x_1)
+    +
+    \log \prod_{t=2}^T \frac{p(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)}
+    +
+    \log \frac{p(z) p(x_T|z)}{q(z|x_T)q(x_T|x_0)}\right]\\
+    %
+    &= \E_{q(x_{1:T},z|x_0)}\left[
+    \log p(x_0|x_1)
+    +
+    \sum_{t=2}^T \log \frac{p(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)}
+    +
+    \log \frac{p(x_T|z)}{q(x_T|x_0)}
+    +
+    \log \frac{p(z)}{q(z|x_T)}\right]\\
+    %
+    &= \E_{q(x_1|x_0)}\left[
+    \log p(x_0|x_1)\right]
+    +
+    \sum_{t=2}^T \E_{q(x_{t-1},x_t|x_0)}\left[\log \frac{p(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)}\right]\\
+    &\qquad +
+    \E_{q(x_T,z|x_0)}\left[
+    \log \frac{p(x_T|z)}{q(x_T|x_0)}\right]
+    +
+    \E_{q(x_{T},z|x_0)}\left[
+    \log \frac{p(z)}{q(z|x_T)}\right]\\
+    %
+    &= \E_{q(x_1|x_0)}\left[
+    \log p(x_0|x_1)\right]
+    +
+    \sum_{t=2}^T \E_{q(x_t|x_0)}\left[\E_{q(x_{t-1}|x_t,x_0)}\left\{\log \frac{p(x_{t-1}|x_t)}{q(x_{t-1}|x_t, x_0)}\right\}\right]\\
+    &\qquad +
+    \E_{q(x_T,z|x_0)}\left[
+    \log p(x_T|z)\right]
+    -
+    \E_{q(x_T,z|x_0)}\left[
+    \log {q(x_T|x_0)}\right]
+    +
+    \E_{q(x_{T}|x_0)}\left[\E_{q(z|x_T)}\left\{
+    \log \frac{p(z)}{q(z|x_T)}\right\}\right]\\
+    %
+    &= \E_{q(x_1|x_0)}\left[
+    \log p(x_0|x_1)\right]
+    -
+    \sum_{t=2}^T \E_{q(x_t|x_0)}\left[D_{KL}\big(q(x_{t-1}|x_t, x_0)||p(x_{t-1}|x_t)\big)\right]\\
+    %
+    &\qquad +
+    \E_{q(x_T,z|x_0)}\left[
+    \log p(x_T|z)\right]
+    -
+    \E_{q(x_T,z|x_0)}\left[
+    \log {q(x_T|x_0)}\right]
+    -
+    \E_{q(x_T|x_0)}\left[
+    D_{KL}\big(q(z|x_T)||p(z)\big)\right]\\
+    %
+\end{align}
+\begin{align}
+    \arg\max_p ELBO = \arg\max_p \bigg\{
+    &\E_{q(x_1|x_0)}\left[
+    \log p(x_0|x_1)\right]
+    -
+    \sum_{t=2}^T \E_{q(x_t|x_0)}\left[D_{KL}\big(q(x_{t-1}|x_t, x_0)||p(x_{t-1}|x_t)\big)\right]\\
+    %
+    &\qquad +
+    \E_{q(x_T,z|x_0)}\left[
+    \log p(x_T|z)\right]
+    -
+    \E_{q(x_T|x_0)}\left[
+    D_{KL}\big(q(z|x_T)||p(z)\big)\right]
+    \bigg\}\\
+    %
+\end{align}
+\begin{align}
+    - L(x_0) &= 
+    \E_{q(x_1|x_0)}\left[
+    \log p(x_0|x_1)\right]
+    -
+    \sum_{t=2}^T \E_{q(x_t|x_0)}\left[D_{KL}\big(q(x_{t-1}|x_t, x_0)||p(x_{t-1}|x_t)\big)\right]\\
+    %
+    &\qquad +
+    \E_{q(x_T,z|x_0)}\left[
+    \log p(x_T|z)\right]
+    -
+    \E_{q(x_T|x_0)}\left[
+    D_{KL}\big(q(z|x_T)||p(z)\big)\right]
+\end{align}
+
+\subsection{Deriving $D_{KL}\big(q(x_{t-1}|x_t, x_0)||p(x_{t-1}|x_t)\big)$}
+
+Recall $x_t|x_0$
+\begin{gather}
+     x_t =x_0+\sqrt{\bar\beta_t}\epsilon,\quad 
+     \epsilon\sim\N(0,I)\\
+     x_0 = x_t - \sqrt{\bar\beta_t}\epsilon
+\end{gather}
+
+Define $\mu_\theta(x_t,t)$
+\begin{gather}
+    \mu_\theta(x_t,t):=x_t-\frac{\beta_t}{\sqrt{\bar\beta_t}}\epsilon_\theta(x_t,t)
+\end{gather}
+
+\begin{align}
+D_{KL}\big(q(x_{t-1}|x_t, x_0)||p(x_{t-1}|x_t)\big)
+&=
+\frac{\bar\beta_{t}}{2\beta_t \bar\beta_{t-1}}
+\norm{
+\mu_\theta(x_t,t)-\frac{
+     {x_t\bar\beta_{t-1}}
+     +{x_0\beta_t}
+     }{\bar\beta_{t}}}^2\\
+&=
+\frac{\bar\beta_{t}}{2\beta_t \bar\beta_{t-1}}
+\norm{
+\mu_\theta(x_t,t)-\frac{
+     {x_t\bar\beta_{t-1}}
+     +{\left(x_t - \sqrt{\bar\beta_t}\epsilon\right)
+     \beta_t}
+     }{\bar\beta_{t}}}^2\\
+&=
+\frac{\bar\beta_{t}}{2\beta_t \bar\beta_{t-1}}
+\norm{
+\mu_\theta(x_t,t)-\frac{
+     {x_t\bar\beta_{t}}
+     -{\sqrt{\bar\beta_t}\beta_t\epsilon
+     }
+     }{\bar\beta_{t}}}^2\\
+&=
+\frac{\bar\beta_{t}}{2\beta_t \bar\beta_{t-1}}
+\norm{
+\mu_\theta(x_t,t)-x_t+\frac{
+     {\beta_t
+     }
+     }{\sqrt{\bar\beta_t}}\epsilon}^2\\
+&=
+\frac{\bar\beta_{t}}{2\beta_t \bar\beta_{t-1}}
+\norm{
+x_t-\frac{\beta_t}{\sqrt{\bar\beta_t}}\epsilon_\theta(x_t,t)
+-x_t+\frac{
+     {\beta_t
+     }
+     }{\sqrt{\bar\beta_t}}\epsilon}^2\\
+&=
+\frac{\bar\beta_{t}}{2\beta_t \bar\beta_{t-1}}
+\norm{
+\frac{
+     {\beta_t
+     }
+     }{\sqrt{\bar\beta_t}}\epsilon
+     -\frac{\beta_t}{\sqrt{\bar\beta_t}}\epsilon_\theta(x_t,t)
+     }^2\\
+&=
+\frac{\sqrt{\bar\beta_t}}{2\bar\beta_{t-1}}
+\norm{
+\epsilon
+     -\epsilon_\theta(x_t,t)
+     }^2\\
+\end{align}
+
+
+\subsection{Deriving likelihoods}
+\begin{align}
+    \log p(x_0|x_1)
+    &= \log\left\{\prod_{i=1}^m
+    x_0[i]^{a_\theta(x_1)[i]-1}
+    (1-x_0[i])^{b_\theta(x_1)[i]-1}
+    \frac
+        {\Gamma\big(a_\theta(x_1)[i] + b_\theta(x_1)[i]\big)}
+        {\Gamma(a_\theta(x_1)[i]) \Gamma( b_\theta(x_1)[i])}
+    \right\}
+    \\
+    &= \sum_{i=1}^m\log\left\{
+    x_0[i]^{a_\theta(x_1)[i]-1}
+    (1-x_0[i])^{b_\theta(x_1)[i]-1}
+    \frac
+        {\Gamma\big(a_\theta(x_1)[i] + b_\theta(x_1)[i]\big)}
+        {\Gamma(a_\theta(x_1)[i]) \Gamma( b_\theta(x_1)[i])}
+    \right\}
+    \\
+    &= \sum_{i=1}^m\bigg\{
+    (a_\theta(x_1)[i]-1)\log x_0[i]
+    +
+    (b_\theta(x_1)[i]-1)\log (1-x_0[i])
+    \\
+    &\qquad\qquad
+    +
+    \log\Gamma\big(a_\theta(x_1)[i] + b_\theta(x_1)[i]\big)
+    -
+    \log \Gamma(a_\theta(x_1)[i])
+    -
+    \log\Gamma( b_\theta(x_1)[i])
+    \bigg\}
+    \\
+    &=
+    (a_\theta(x_1)-1)^T\log x_0
+    +
+    (b_\theta(x_1)-1)^T\log (1-x_0)
+    \\
+    &\qquad\qquad
+    +\sum_{i=1}^m\bigg\{
+    \log\Gamma\big\{a_\theta(x_1)[i] + b_\theta(x_1)[i]\big\}
+    -
+    \log \Gamma\big\{a_\theta(x_1)[i]\big\}
+    -
+    \log\Gamma\big\{ b_\theta(x_1)[i]\big\}
+    \bigg\}
+\end{align}

@@ -1,0 +1,127 @@
+
+\section{Theory}
+\subsection{Set the scene}
+
+Input: $x_0\in \R^m $
+
+Latents: $x_t\in\R^m,z\in\R^d, t=1\hdots T$
+
+\subsection{Diffusion process}
+\begin{gather}
+x_0\rightarrow x_1 \rightarrow  \hdots \rightarrow x_T \rightarrow z \\
+q(x_t|x_{t-1})=\N(x_t;x_{t-1},\beta_t I),\beta_t\in\R,\quad  t=1\hdots T\\
+\end{gather}
+
+\subsection{Encoder}
+\begin{gather}
+    q(z|x_T)=\N(z;\mu_\phi (x_T), \sigma^2_\phi (x_T) I), \quad \sigma^2_\phi(x_T)\in \R^d\\
+p(z)=\N(z;0,I)\\
+\end{gather}
+
+\subsection{Tools}
+\begin{gather}
+    q(x_t|x_0)=\N(x_t;x_0,\bar\beta_t),\quad \bar\beta_t=\sum_{i=1}^t\\
+    q(x_t|x_{t-1}) =q(x_t|x_{t-1}, x_0)=\frac{q(x_{t-1}|x_t, x_0)q(x_t|x_0)}{q(x_{t-1}| x_0)}\\
+    q(x_{1:T},z|x_0)=q(z|x_T)\prod_{t=1}^T q(x_t|x_{t-1})\\
+    p(x_{0:T},z) = p(z) p(x_T|z)\prod_{t=1}^T p(x_{t-1}|x_t)
+ \end{gather}
+ \begin{gather}
+     q(x_{t-1}|x_t,x_0)=
+     \N\left(x_{t-1}; 
+     \frac{
+     {x_t\bar\beta_{t-1}}
+     +{x_0\beta_t}
+     }{\bar\beta_{t}}
+     , 
+     \frac{\beta_t \bar\beta_{t-1}}{\bar\beta_{t}}
+     \right), \quad t=2\hdots T
+ \end{gather}
+
+
+\subsection{Loss}
+
+\begin{align}
+    L(x_0) &=
+    -
+    \E_{q(x_1|x_0)}\left[
+    \log p(x_0|x_1)\right]
+    +
+    \sum_{t=2}^T \E_{q(x_t|x_0)}\left[D_{KL}\big(q(x_{t-1}|x_t, x_0)||p(x_{t-1}|x_t)\big)\right]\\
+    %
+    &\qquad
+    -
+    \E_{q(x_T,z|x_0)}\left[
+    \log p(x_T|z)\right]
+    +
+    \E_{q(x_T|x_0)}\left[
+    D_{KL}\big(q(z|x_T)||p(z)\big)\right]
+\end{align}
+
+
+\subsection{Decoder}
+\begin{gather}
+p(x_{t-1}|x_t)
+=\N\left(
+x_{t-1};
+%mean
+\mu_\theta(x_t,t),
+%variance
+\frac{\beta_t \bar\beta_{t-1}}{\bar\beta_{t}}
+\right),
+\quad t=2\hdots T
+\\
+%
+p(x_0|x_1)=Beta(a_\theta(x_1),b_\theta(x_1))\\
+%
+p(x_T|z)=\N\left(x_T;\mu_\theta(z,T+1),\bar\beta_T\right)
+\end{gather}
+
+\subsection{KL divergences}
+\begin{gather}
+D_{KL}\big(q(z|x_T)||p(z)\big)
+=
+\frac{1}{2}\left(
+\log \frac{1}{\prod_{i=1}^d\sigma^2_\phi(x_T)[i]}
+-d
++
+\sum_{i=1}^d \frac{1}{\sigma^2_\phi(x_T)[i]}
++
+\mu_\phi(x_T)^T \sigma^2_\phi(x_T)^{-1} I \mu_\phi(x_T)
+\right)\\
+%
+D_{KL}\big(q(x_{t-1}|x_t, x_0)||p(x_{t-1}|x_t)\big)
+=
+\frac{\sqrt{\bar\beta_t}}{2\bar\beta_{t-1}}
+\norm{
+\epsilon
+     -\epsilon_\theta(x_t,t)
+     }^2,\qquad x_t=x_0 + \sqrt{\bar\beta_t}\epsilon, \quad \epsilon\sim\N(0,I)\\
+\end{gather}
+
+\subsection{Likelihoods}
+\begin{align}
+    \log p(x_T|z)
+    &= \log\N(x_T;\mu_\theta(z,T+1), \bar\beta_T)
+    \\
+    &=\log \left\{(2\pi)^{-k/2}\det(\bar\beta_TI)^{-1/2}\exp\left(-\frac{1}{2}(x_T-\mu_\theta(z,T+1))^T(\bar\beta_TI)^{-1}(x_T-\mu_\theta(z,T+1))\right)\right\}
+    \\
+    &=
+    -\frac{1}{2 \bar\beta_T}(x_T-\mu_\theta(z,T+1))^2
+    \\
+\end{align}
+\begin{align}
+    \log p(x_0|x_1)
+    &=
+    (a_\theta(x_1)-1)^T\log x_0
+    +
+    (b_\theta(x_1)-1)^T\log (1-x_0)
+    \\
+    &\qquad\qquad
+    +\sum_{i=1}^m\bigg\{
+    \log\Gamma\big\{a_\theta(x_1)[i] + b_\theta(x_1)[i]\big\}
+    -
+    \log \Gamma\big\{a_\theta(x_1)[i]\big\}
+    -
+    \log\Gamma\big\{ b_\theta(x_1)[i]\big\}
+    \bigg\}
+\end{align}
